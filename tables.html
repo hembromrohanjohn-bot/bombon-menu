@@ -6,11 +6,11 @@
 <title>Bombon Table QR Cards</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,900;1,700&family=Oswald:wght@600;700&family=Lora:ital,wght@0,500;1,500&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Londrina+Solid:wght@400;900&family=Lora:ital,wght@0,500;1,500&display=swap" rel="stylesheet">
 <style>
 :root{
   --rojo:#8E2B1F;--rojo-deep:#4A1610;--azafran:#E8A623;--cobalto:#1F4B99;--oliva:#5F6E2C;--crema:#FBF2DF;--tinta:#3A1C12;--ink-soft:#6F5646;--rule:rgba(58,28,18,.25);
-  --wordmark:"Playfair Display",Georgia,serif;--cond:"Oswald","Arial Narrow",sans-serif;--serif:"Lora",Georgia,serif;
+  --wordmark:"Ruina","Londrina Solid","Arial Narrow",sans-serif;--cond:"Ruina","Londrina Solid","Arial Narrow",sans-serif;--serif:"Lora",Georgia,serif;
   --tile: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='64' height='64' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' fill='%23FBF2DF'/%3E%3Cg fill='%231F4B99'%3E%3Crect x='21' y='21' width='22' height='22'/%3E%3Cpath d='M32 16.4L47.6 32 32 47.6 16.4 32z'/%3E%3Cpath d='M0 0h14a14 14 0 0 1-14 14zM64 0v14A14 14 0 0 1 50 0zM0 64V50a14 14 0 0 1 14 14zM64 64H50a14 14 0 0 1 14-14z'/%3E%3C/g%3E%3Ccircle cx='32' cy='32' r='6.5' fill='%23E8A623'/%3E%3Ccircle cx='32' cy='32' r='2.4' fill='%23FBF2DF'/%3E%3Cg fill='%23E8A623'%3E%3Ccircle cx='0' cy='0' r='5'/%3E%3Ccircle cx='64' cy='0' r='5'/%3E%3Ccircle cx='0' cy='64' r='5'/%3E%3Ccircle cx='64' cy='64' r='5'/%3E%3C/g%3E%3Cg fill='%235F6E2C'%3E%3Cellipse cx='32' cy='6' rx='2' ry='4.5'/%3E%3Cellipse cx='32' cy='58' rx='2' ry='4.5'/%3E%3Cellipse cx='6' cy='32' rx='4.5' ry='2'/%3E%3Cellipse cx='58' cy='32' rx='4.5' ry='2'/%3E%3C/g%3E%3C/svg%3E");
 }
 *{box-sizing:border-box;margin:0;padding:0}
@@ -19,14 +19,14 @@ body{background:var(--rojo-deep);color:var(--tinta);font:16px/1.45 var(--serif);
 /* ---------- screen toolbar ---------- */
 .tools{max-width:1000px;margin:0 auto;padding:28px 16px 8px}
 .tools{color:var(--crema)}
-.tools h1{font:900 38px var(--wordmark);color:var(--azafran);margin-bottom:6px}
+.tools h1{font:900 44px var(--wordmark);text-transform:uppercase;letter-spacing:.03em;color:var(--azafran);margin-bottom:6px}
 .tools p{color:#F3DDB4;max-width:70ch;margin-bottom:10px}
 .tools code{background:rgba(255,255,255,.12);padding:1px 5px;border-radius:3px;font-size:13px}
 .warn{background:#F6E3D6;border:1px solid #D9A58A;border-left:4px solid var(--azafran);padding:10px 14px;border-radius:3px;margin:10px 0;color:#5A2A15}
 .row{display:flex;flex-wrap:wrap;align-items:end;gap:12px;margin:14px 0 4px}
-.row label{font:600 13px var(--cond);letter-spacing:.12em;text-transform:uppercase;color:#F3DDB4;display:flex;flex-direction:column;gap:4px}
+.row label{font:400 15px var(--cond);letter-spacing:.12em;text-transform:uppercase;color:#F3DDB4;display:flex;flex-direction:column;gap:4px}
 .row input{width:90px;min-height:44px;padding:8px 10px;border:1px solid var(--rule);border-radius:3px;background:#FBF7EE;font:16px var(--serif)}
-.row button{appearance:none;cursor:pointer;min-height:44px;padding:0 22px;border-radius:999px;border:0;background:var(--azafran);color:var(--rojo-deep);font:700 16px var(--cond);letter-spacing:.12em;text-transform:uppercase}
+.row button{appearance:none;cursor:pointer;min-height:44px;padding:0 22px;border-radius:999px;border:0;background:var(--azafran);color:var(--rojo-deep);font:400 18px var(--cond);letter-spacing:.08em;text-transform:uppercase}
 
 /* ---------- cards: A6 (105 × 148 mm), four per A4 sheet ---------- */
 .sheets{display:flex;flex-wrap:wrap;justify-content:center;gap:18px;padding:18px 16px 60px}
@@ -34,14 +34,14 @@ body{background:var(--rojo-deep);color:var(--tinta);font:16px/1.45 var(--serif);
   box-shadow:0 12px 30px -14px rgba(0,0,0,.6)}
 .tiles{width:100%;height:9mm;flex:none;background:var(--tile) 0 0/9mm 9mm;border-bottom:.8mm solid var(--azafran)}
 .head{width:100%;background:var(--rojo);color:var(--azafran);padding:4mm 0 3.5mm}
-.est{font:600 7pt var(--cond);letter-spacing:.3em;text-transform:uppercase;color:#F6D9A0}
-.logo{font:900 28pt/1.1 var(--wordmark);margin-top:1mm}
-.tbl{display:flex;align-items:center;gap:3mm;margin-top:4mm;font:700 9pt var(--cond);letter-spacing:.34em;text-transform:uppercase;color:var(--rojo)}
+.est{font:400 8pt var(--cond);letter-spacing:.3em;text-transform:uppercase;color:#F6D9A0}
+.logo{font:900 34pt/1 var(--wordmark);text-transform:uppercase;letter-spacing:.03em;margin-top:1mm}
+.tbl{display:flex;align-items:center;gap:3mm;margin-top:4mm;font:400 11pt var(--cond);letter-spacing:.34em;text-transform:uppercase;color:var(--rojo)}
 .tbl::before,.tbl::after{content:"";width:9mm;height:.3mm;background:var(--azafran)}
-.num{font:900 38pt/1 var(--wordmark);color:var(--tinta);margin:1mm 0 3mm}
+.num{font:900 46pt/1 var(--wordmark);color:var(--tinta);margin:1mm 0 3mm}
 .qr{width:58mm;height:58mm;display:block;border-radius:1.5mm;border:.4mm solid var(--rule)}
-.cta{font:italic 700 13pt/1.2 var(--wordmark);color:var(--rojo);margin-top:3mm}
-.steps{display:flex;gap:3.5mm;margin-top:1.5mm;font:600 7pt var(--cond);letter-spacing:.08em;text-transform:uppercase;color:var(--ink-soft)}
+.cta{font:400 15pt/1.2 var(--wordmark);text-transform:uppercase;letter-spacing:.04em;color:var(--rojo);margin-top:3mm}
+.steps{display:flex;gap:3.5mm;margin-top:1.5mm;font:400 8pt var(--cond);letter-spacing:.08em;text-transform:uppercase;color:var(--ink-soft)}
 .steps b{display:inline-grid;place-items:center;width:3.6mm;height:3.6mm;border-radius:50%;background:var(--cobalto);color:#fff;font-size:5.5pt;margin-right:1mm;vertical-align:.2mm}
 .foot{margin-top:auto;width:100%;height:5mm;background:var(--tile) 0 0/5mm 5mm;border-top:.5mm solid var(--azafran)}
 .link{display:block;margin-top:6px;font-size:12px;color:#F3DDB4;word-break:break-all;text-align:center;max-width:105mm}
