@@ -1,9 +1,8 @@
 # Bombon Menu — web version
 
-Spanish-themed café menu: Andalusian azulejo tiles, pimentón red, saffron and cobalt. Laid out like the
-Dario's digital menu: a centred "book", sticky bar with **Drinks · Food · Sweets** tabs, **★ Signatures**,
-a **Veg | Non-veg** switch, search, and section links that follow the scroll. Section titles are Spanish
-with English subtitles; dish names are unchanged.
+Spanish-themed café menu (Andalusian azulejo tiles, pimentón red, saffron and cobalt), all in English, with
+bold type. Laid out like the Dario's digital menu: a centred "book", sticky bar with **Drinks · Food · Sweets**
+tabs, **★ Signatures**, a **Veg | Non-veg** switch, search, and section links that follow the scroll.
 
 ## Files
 - `index.html` — page shell: cover, sticky bar, footer
@@ -69,7 +68,7 @@ unusual orders.
 ## Editing items
 `menu-data.js` has three tabs (`drinks`, `food`, `sweets`), each a list of sections:
 
-    { id:"platos", es:"Platos", en:"Plates", note:"small print", ctx:"Kitchen label", items:[ … ], extras:{ title, items:[ … ] } }
+    { id:"plates", title:"Plates", note:"small print", ctx:"Kitchen label", items:[ … ], extras:{ title, items:[ … ] } }
 
 Each dish is an object:
 
@@ -87,8 +86,8 @@ Each dish is an object:
 Cmd+P prints all three tabs one after another (the sticky bar and ordering buttons are left out).
 
 ## Design notes
-- Fonts (Google Fonts): Abril Fatface (wordmark), Yellowtail (section titles, links), Oswald (labels, prices),
-  Josefin Sans (dish names), EB Garamond italic (descriptions)
+- Fonts (Google Fonts), all bold: Playfair Display Black (wordmark, section titles; bold italic for section links),
+  Oswald Bold (tabs, labels, prices), Montserrat ExtraBold (dish names), Lora Medium Italic (descriptions)
 - Colours: pimentón `#8E2B1F`, saffron `#E8A623`, cobalt `#1F4B99`, olive `#5F6E2C`, crema `#FBF2DF`, ink `#3A1C12`
 - Tab accent colours: Drinks cobalt, Food pimentón, Sweets amber
 
