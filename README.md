@@ -86,8 +86,12 @@ Each dish is an object:
 Cmd+P prints all three tabs one after another (the sticky bar and ordering buttons are left out).
 
 ## Design notes
-- Fonts (Google Fonts), all bold: Playfair Display Black (wordmark, section titles; bold italic for section links),
-  Oswald Bold (tabs, labels, prices), Montserrat ExtraBold (dish names), Lora Medium Italic (descriptions)
+- Fonts: cut-paper display capitals in the style of RUINA (Felipe Estay / Rodrigo Typo) for the wordmark, titles,
+  labels, dish names and prices. RUINA itself is free only as a personal-use demo, so the site uses the free
+  look-alike **Londrina Solid** (Google Fonts, OFL). Lora Medium Italic for descriptions, Montserrat for form fields.
+- To use real RUINA after buying its **web** licence (Fontspring / MyFonts): put the web font files in `fonts/` and add
+  an `@font-face { font-family: "Ruina"; src: url("fonts/ruina.woff2") format("woff2"); }` rule at the top of
+  `styles.css`. The font stacks already list "Ruina" first, so everything switches over automatically.
 - Colours: pimentón `#8E2B1F`, saffron `#E8A623`, cobalt `#1F4B99`, olive `#5F6E2C`, crema `#FBF2DF`, ink `#3A1C12`
 - Tab accent colours: Drinks cobalt, Food pimentón, Sweets amber
 
