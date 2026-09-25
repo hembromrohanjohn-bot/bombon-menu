@@ -2,61 +2,55 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Bombon Menu</title>
+<meta name="description" content="The Bombon menu: coffee, all-day breakfast, bakes and sweets.">
+<meta name="theme-color" content="#8E2B1F">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght,SOFT,WONK@0,9..144,300..600,50..100,0..1;1,9..144,300..500,50..100,0..1&family=Cormorant+Garamond:ital,wght@0,500;0,600;0,700;1,500&family=Karla:ital,wght@0,400;0,500;1,400&family=Caveat:wght@500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Abril+Fatface&family=Yellowtail&family=Oswald:wght@300;500;600&family=Josefin+Sans:wght@600;700&family=EB+Garamond:ital,wght@0,400;0,500;1,400;1,500&display=swap">
 <link rel="stylesheet" href="styles.css">
 </head>
 <body>
 
-<header class="mast">
-  <div class="frame">
-    <svg class="corner tl" viewBox="0 0 26 26" fill="none" stroke="currentColor" stroke-width="1.2" aria-hidden="true"><path d="M1 25V1h24"/><path d="M5 25V5h20" opacity=".5"/><circle cx="9.5" cy="9.5" r="1.6" fill="currentColor" stroke="none"/></svg>
-    <svg class="corner tr" viewBox="0 0 26 26" fill="none" stroke="currentColor" stroke-width="1.2" aria-hidden="true"><path d="M1 25V1h24"/><path d="M5 25V5h20" opacity=".5"/><circle cx="9.5" cy="9.5" r="1.6" fill="currentColor" stroke="none"/></svg>
-    <svg class="corner bl" viewBox="0 0 26 26" fill="none" stroke="currentColor" stroke-width="1.2" aria-hidden="true"><path d="M1 25V1h24"/><path d="M5 25V5h20" opacity=".5"/><circle cx="9.5" cy="9.5" r="1.6" fill="currentColor" stroke="none"/></svg>
-    <svg class="corner br" viewBox="0 0 26 26" fill="none" stroke="currentColor" stroke-width="1.2" aria-hidden="true"><path d="M1 25V1h24"/><path d="M5 25V5h20" opacity=".5"/><circle cx="9.5" cy="9.5" r="1.6" fill="currentColor" stroke="none"/></svg>
-    <div class="est">Café &nbsp;·&nbsp; Coffee&nbsp;Bar &nbsp;·&nbsp; All&nbsp;Day&nbsp;Breakfast</div>
-    <h1 class="logo">Bomb<em>o</em>n</h1>
-    <div class="divider" aria-hidden="true"><svg width="18" height="10" viewBox="0 0 18 10" fill="currentColor"><path d="M9 0l3 5-3 5-3-5z"/></svg></div>
-    <div class="strap">slow coffee, good bread &amp; long conversations</div>
-    <div class="hand">Linger longer.</div>
-    <div class="pfilter" id="pfilter"></div>
-  </div>
-</header>
+<div class="book">
+  <div class="tiles" aria-hidden="true"></div>
+  <header class="cover">
+    <div class="kicker">Café <i></i> Barra de café <i></i> Desayunos</div>
+    <h1 class="wordmark">Bombon</h1>
+    <div class="line">Slow coffee, good bread &amp; long conversations.</div>
+    <div class="facts"><span>All-day breakfast</span><span>Quédate un rato más</span></div>
+  </header>
 
-<div class="bar">
-  <nav aria-label="Menu sections"><ul id="nav"></ul></nav>
-  <div class="diet">
-    <div class="seg" id="seg" role="radiogroup" aria-label="Filter the menu by diet">
-      <button type="button" role="radio" aria-checked="true" data-diet="all"><span class="lbl">All</span><span class="n"></span></button>
-      <button type="button" role="radio" aria-checked="false" data-diet="veg"><span class="lbl">Veg</span><span class="n"></span></button>
-      <button type="button" role="radio" aria-checked="false" data-diet="egg"><span class="lbl">Egg</span><span class="n"></span></button>
-      <button type="button" role="radio" aria-checked="false" data-diet="nonveg"><span class="lbl">Non-Veg</span><span class="n"></span></button>
+  <div class="bar" id="bar">
+    <div class="table-strip" id="table-strip" hidden></div>
+    <div class="bar-top">
+      <div class="tabs" role="tablist" aria-label="Menu">
+        <button role="tab" aria-selected="true" data-tab="drinks">Drinks</button>
+        <button role="tab" aria-selected="false" data-tab="food">Food</button>
+        <button role="tab" aria-selected="false" data-tab="sweets">Sweets</button>
+      </div>
+      <button class="picks-btn" id="picks" aria-pressed="false">★ Signatures</button>
+      <div class="diet" role="group" aria-label="Diet">
+        <button type="button" data-diet="veg" aria-pressed="false"><span class="mark veg" aria-hidden="true"></span>Veg</button>
+        <button type="button" data-diet="nonveg" aria-pressed="false"><span class="mark nonveg" aria-hidden="true"></span>Non-veg</button>
+      </div>
     </div>
-    <label class="eggopt" id="eggopt" hidden><input type="checkbox" id="incegg"> include egg dishes</label>
+    <div class="search"><input id="q" type="search" aria-label="Search the menu" placeholder="Search dishes, drinks, ingredients" autocomplete="off"></div>
+    <nav class="chips" id="chips" aria-label="Sections"></nav>
   </div>
-</div>
-<p id="live" class="sr" aria-live="polite"></p>
 
-<main id="menu"></main>
-<div class="empty" id="empty" hidden>
-  <div class="hand">Nothing on the board for that one.</div>
-  <p>No dishes match this filter right now.</p>
-  <button type="button" id="reset">Show the full menu</button>
-</div>
+  <main class="pages" id="pages"></main>
+  <p id="live" class="sr" aria-live="polite"></p>
 
-<div class="torn" aria-hidden="true"></div>
-<footer>
-  <div class="legend">
-    <span><span data-mark="veg"></span>vegetarian</span>
-    <span><span data-mark="egg"></span>contains egg</span>
-    <span><span data-mark="nonveg"></span>non-vegetarian</span>
-  </div>
-  <p class="fine">A 10% service charge is applicable. Please inform your server of any food allergies, intolerances, or dietary restrictions before ordering.</p>
-  <div class="hand">Linger longer.</div>
-</footer>
+  <footer>
+    <span class="wordmark">Bombon</span>
+    <div>All prices in rupees. A 10% service charge is applicable.</div>
+    <div>Please tell your server about any food allergies, intolerances or dietary needs before ordering.</div>
+    <div class="legend foot-legend"><span><span class="mark veg"></span>Vegetarian</span><span><span class="mark nonveg"></span>Non-vegetarian</span><span><span class="tag egg">EGG</span>Contains egg</span></div>
+    <div class="concept">¡Quédate un rato más!</div>
+  </footer>
+</div>
 
 <script src="config.js"></script>
 <script src="menu-data.js"></script>
