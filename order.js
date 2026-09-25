@@ -1,7 +1,7 @@
 /* ============================================================
    Table ordering — only active when the page is opened from a
    table QR code (index.html?table=10). The guest builds an order,
-   then WhatsApp opens with it pre-filled, addressed to the café.
+   then taps "Place order" and it goes straight to the orders board.
    ============================================================ */
 (function(){
   const t = new URLSearchParams(location.search).get("table") || "";
@@ -27,7 +27,7 @@
     LABEL[el.dataset.key] = c ? `${c}: ${it.name}` : it.name;
   });
 
-  /* ---------- basket (saved so it survives a trip to WhatsApp and back) ---------- */
+  /* ---------- basket (saved on the phone so a reload or a dropped connection doesn't lose it) ---------- */
   let cart = {lines:{}, name:"", note:""};
   try{
     const saved = JSON.parse(localStorage.getItem(STORE) || "null");
@@ -68,6 +68,7 @@
   });
 
   /* ---------- order bar + review sheet ---------- */
+  const pct = Math.round(CONFIG.serviceCharge * 100);
   document.body.insertAdjacentHTML("beforeend", `
   <div class="orderbar" role="region" aria-label="Your order">
     <button type="button" id="ob-open"><span class="ob-table">Table ${TABLE}</span><span class="ob-sum" id="ob-sum"></span><span class="ob-go">Review</span></button>
@@ -80,16 +81,16 @@
         <label class="fld">Your name <em>(optional)</em><input id="o-name" autocomplete="given-name" maxlength="40"></label>
         <label class="fld">Anything else for the kitchen? <em>(optional)</em><textarea id="o-note" rows="2" maxlength="300" placeholder="e.g. allergies, bring everything together"></textarea></label>
         <dl class="totals" id="totals"></dl>
-        <a class="send" id="send" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M12 2a10 10 0 0 0-8.6 15.1L2 22l5-1.3A10 10 0 1 0 12 2zm0 18.2a8.2 8.2 0 0 1-4.2-1.2l-.3-.2-3 .8.8-2.9-.2-.3A8.2 8.2 0 1 1 12 20.2zm4.5-6.1c-.2-.1-1.5-.7-1.7-.8-.2-.1-.4-.1-.6.1l-.8 1c-.1.2-.3.2-.5.1a6.7 6.7 0 0 1-3.3-2.9c-.2-.4.3-.4.8-1.3.1-.2 0-.3 0-.4l-.8-1.8c-.2-.5-.4-.4-.6-.4h-.5a1 1 0 0 0-.7.3 3 3 0 0 0-.9 2.2 5.2 5.2 0 0 0 1.1 2.8 11.9 11.9 0 0 0 4.6 4c1.7.7 2.3.8 3.2.7.5-.1 1.5-.6 1.7-1.2.2-.6.2-1.1.2-1.2-.1-.1-.3-.2-.5-.3z"/></svg>Send order on WhatsApp</a>
+        <button type="button" class="send" id="send">Place order</button>
         <p class="err" id="send-err" role="alert" hidden></p>
-        <p class="small">WhatsApp opens with your order written out — just press <b>Send</b> there. Prices are before the ${Math.round(CONFIG.serviceCharge*100)}% service charge where shown.</p>
+        <p class="small">Your order goes straight to our kitchen. Pay at the counter when you're done.</p>
       </div>
-      <div id="sheet-sent" class="sent" hidden>
-        <div class="hand">Almost there!</div>
-        <p>WhatsApp should now be open with your order for <b>Table ${TABLE}</b>. Press <b>Send</b> in WhatsApp to place it — we'll bring it over.</p>
-        <p class="small">Didn't open? <a id="send-again" target="_blank" rel="noopener">Try again</a></p>
-        <button type="button" class="btn" id="new-order">Start a new order</button>
-        <button type="button" class="btn ghost" id="back-edit">Back to my order</button>
+      <div id="sheet-done" class="sent" hidden>
+        <div class="tick" aria-hidden="true">✓</div>
+        <div class="hand">Order received!</div>
+        <p>The kitchen has your order for <b>Table ${TABLE}</b>. We'll bring it over.</p>
+        <p class="small" id="done-sum"></p>
+        <button type="button" class="btn" id="order-more">Order something else</button>
       </div>
     </div>
   </dialog>`);
@@ -97,28 +98,17 @@
   const sheet = $("sheet"), linesEl = $("lines");
   $("o-name").value = cart.name; $("o-note").value = cart.note;
 
-  // Order reference, e.g. T10-1432-K7Q — the same ref appears in WhatsApp and in the order log sheet.
+  // Order reference, e.g. T10-1432-K7Q — shown to the guest and on the orders board.
   function newRef(){
     const now = new Date(), hhmm = String(now.getHours()).padStart(2,"0") + String(now.getMinutes()).padStart(2,"0");
     const abc = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
     let tag = ""; for(let i = 0; i < 3; i++) tag += abc[Math.floor(Math.random() * abc.length)];
     return `T${TABLE}-${hhmm}-${tag}`;
   }
-  let ref = newRef(), sent = false;
-  const touched = () => { if(sent){ ref = newRef(); sent = false; } };   // edited after sending → it's a new order
-
-  function message(){
-    const out = [`*NEW ORDER · TABLE ${TABLE}*`, `Ref ${ref}` + (cart.name.trim() ? ` · ${cart.name.trim()}` : ""), ""];
-    lines().forEach(l => {
-      out.push(`${l.qty} × ${LABEL[l.k]} — ${money(l.qty * l.price)}`);
-      if(l.note.trim()) out.push(`   ↳ ${l.note.trim()}`);
-    });
-    const sub = subtotal(), svc = sub * CONFIG.serviceCharge;
-    out.push("", `Items: ${money(sub)}`, `Service ${Math.round(CONFIG.serviceCharge*100)}%: ${money(svc)}`, `*Total: ${money(sub + svc)}*`);
-    if(cart.note.trim()) out.push("", `Note: ${cart.note.trim()}`);
-    return out.join("\n");
-  }
-  const waLink = () => `https://wa.me/${CONFIG.whatsapp}?text=${encodeURIComponent(message())}`;
+  // A retry after a failed send keeps the same ref, so the kitchen never gets it twice;
+  // any edit after an attempt makes it a new order with a new ref.
+  let ref = newRef(), attempted = false, sending = false;
+  const touched = () => { if(attempted){ ref = newRef(); attempted = false; } };
 
   function render(){
     // + / − steppers in the menu
@@ -149,9 +139,8 @@
       if(el) el.focus(); else $("sheet-x").focus();
     }
     const svc = sub * CONFIG.serviceCharge;
-    $("totals").innerHTML = n ? `<dt>Items</dt><dd>${money(sub)}</dd><dt>Service ${Math.round(CONFIG.serviceCharge*100)}%</dt><dd>${money(svc)}</dd><dt class="t">Estimated total</dt><dd class="t">${money(sub+svc)}</dd>` : "";
-    $("send").href = waLink(); $("send-again").href = waLink();
-    $("send").classList.toggle("off", n === 0);
+    $("totals").innerHTML = n ? `<dt>Items</dt><dd>${money(sub)}</dd><dt>Service ${pct}%</dt><dd>${money(svc)}</dd><dt class="t">Estimated total</dt><dd class="t">${money(sub+svc)}</dd>` : "";
+    $("send").disabled = n === 0 || sending;
   }
 
   linesEl.addEventListener("click", e => {
@@ -162,46 +151,48 @@
   linesEl.addEventListener("input", e => {
     if(!e.target.classList.contains("l-note")) return;
     touched(); cart.lines[e.target.dataset.k].note = e.target.value; save();
-    $("send").href = waLink(); $("send-again").href = waLink();
   });
-  $("o-name").addEventListener("input", e => { touched(); cart.name = e.target.value; save(); $("send").href = waLink(); });
-  $("o-note").addEventListener("input", e => { touched(); cart.note = e.target.value; save(); $("send").href = waLink(); });
+  $("o-name").addEventListener("input", e => { touched(); cart.name = e.target.value; save(); });
+  $("o-note").addEventListener("input", e => { touched(); cart.note = e.target.value; save(); });
 
-  const showSent = on => { $("sheet-edit").hidden = on; $("sheet-sent").hidden = !on; };
-  $("ob-open").addEventListener("click", () => {
-    if($("sheet-sent").hidden) { ref = newRef(); render(); }    // fresh ref per order, kept while "sent" is showing
-    showSent(false); $("send-err").hidden = true; sheet.showModal();
-  });
+  const showDone = on => { $("sheet-edit").hidden = on; $("sheet-done").hidden = !on; };
+  const fail = msg => { $("send-err").textContent = msg; $("send-err").hidden = false; live.textContent = msg; };
+  $("ob-open").addEventListener("click", () => { showDone(false); $("send-err").hidden = true; render(); sheet.showModal(); });
+  $("sheet-x").addEventListener("click", () => sheet.close());
+  sheet.addEventListener("click", e => { if(e.target === sheet) sheet.close(); });   // tap the backdrop to close
+  $("order-more").addEventListener("click", () => sheet.close());
 
-  // Copy of the order for the café's Google Sheet (config.js → ordersUrl). sendBeacon still
-  // delivers while the phone switches to WhatsApp; the sheet ignores a repeated ref.
-  function logOrder(){
-    sent = true;
-    if(!CONFIG.ordersUrl) return;
+  /* ---------- place the order ---------- */
+  $("send").addEventListener("click", async () => {
+    $("send-err").hidden = true;
+    if(!count()) return fail("Add something to your order first.");
+    if(!CONFIG.ordersUrl) return fail("Ordering from the table isn't switched on yet. Please order with your server.");
+    const n = count(), total = subtotal() * (1 + CONFIG.serviceCharge);
     const body = JSON.stringify({
       ref, table:TABLE, name:cart.name.trim(), note:cart.note.trim(),
       items: lines().map(l => ({name:LABEL[l.k], qty:l.qty, price:l.price, note:l.note.trim()})),
     });
+    attempted = true; sending = true;
+    const btn = $("send"); btn.disabled = true; btn.textContent = "Sending…";
+    const ctl = new AbortController(), timer = setTimeout(() => ctl.abort(), 20000);
     try{
-      if(navigator.sendBeacon && navigator.sendBeacon(CONFIG.ordersUrl, new Blob([body], {type:"text/plain"}))) return;
-    }catch(e){}
-    fetch(CONFIG.ordersUrl, {method:"POST", mode:"no-cors", keepalive:true, headers:{"Content-Type":"text/plain"}, body}).catch(()=>{});
-  }
-  $("sheet-x").addEventListener("click", () => sheet.close());
-  sheet.addEventListener("click", e => { if(e.target === sheet) sheet.close(); });   // tap the backdrop to close
-  $("send").addEventListener("click", e => {
-    const err = !count() ? "Add something to your order first."
-      : !/^\d{8,15}$/.test(CONFIG.whatsapp) ? "Ordering by WhatsApp isn't switched on yet — please order with your server." : "";
-    if(err){ e.preventDefault(); $("send-err").textContent = err; $("send-err").hidden = false; return; }
-    logOrder();
-    showSent(true);
-  });
-  $("send-again").addEventListener("click", logOrder);
-  $("back-edit").addEventListener("click", () => showSent(false));
-  $("new-order").addEventListener("click", () => {
-    cart = {lines:{}, name:cart.name, note:""}; $("o-note").value = ""; ref = newRef(); sent = false;
-    save(); render(); sheet.close();
-    live.textContent = "Started a new order.";
+      // text/plain keeps this a "simple" request, so it works cross-origin with Apps Script.
+      const res = await fetch(CONFIG.ordersUrl, {method:"POST", body, headers:{"Content-Type":"text/plain;charset=utf-8"}, signal:ctl.signal});
+      const out = await res.json();
+      if(!out.ok) throw new Error(out.error || "not accepted");
+      $("done-sum").textContent = `Ref ${ref} · ${n} item${n===1?"":"s"} · about ${money(total)} incl. service`;
+      cart = {lines:{}, name:cart.name, note:""}; $("o-note").value = "";
+      ref = newRef(); attempted = false; save();
+      showDone(true);
+      live.textContent = `Order received for table ${TABLE}.`;
+    }catch(err){
+      const msg = err.name === "AbortError" ? "No reply from the kitchen." :
+                  /table|quantity|price|item|ref|order/i.test(err.message) ? `The order couldn't be placed (${err.message}).` :
+                  "Couldn't reach the kitchen.";
+      fail(msg + " Please check your connection and tap Place order again, or ask your server.");
+    }finally{
+      clearTimeout(timer); sending = false; btn.textContent = "Place order"; render();
+    }
   });
 
   render();

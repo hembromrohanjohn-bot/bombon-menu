@@ -98,7 +98,7 @@ function card(n){
     <div class="num">${n}</div>
     ${qrSvg(url)}
     <div class="cta">Scan to see the menu &amp; order</div>
-    <div class="steps"><span><b>1</b>Scan</span><span><b>2</b>Add dishes</span><span><b>3</b>Send on WhatsApp</span></div>
+    <div class="steps"><span><b>1</b>Scan</span><span><b>2</b>Add dishes</span><span><b>3</b>Place order</span></div>
     <div class="hand">Linger longer.</div>
   </div><div class="link">test: <a href="${url}" target="_blank" rel="noopener">${url}</a></div></div>`;
 }
@@ -114,7 +114,7 @@ from.oninput = to.oninput = draw;
 
 const warn = [];
 if(/example\.github\.io/.test(CONFIG.siteUrl)) warn.push("<b>siteUrl</b> in <code>config.js</code> is still the placeholder — these codes won't open your menu. Don't print yet.");
-if(!/^\d{8,15}$/.test(CONFIG.whatsapp)) warn.push("<b>whatsapp</b> in <code>config.js</code> is empty — guests can browse but can't send orders.");
+if(!CONFIG.ordersUrl) warn.push("<b>ordersUrl</b> in <code>config.js</code> is empty — guests can browse the menu but can't place orders yet.");
 document.getElementById("warn").innerHTML = warn.map(w => `<div class="warn">${w}</div>`).join("");
 draw();
 </script>

@@ -3,14 +3,10 @@
    ============================================================ */
 const CONFIG = {
   // Where the menu is published. The table QR codes point here (…?table=10).
-  siteUrl: "https://example.github.io/bombon-menu/",
+  siteUrl: "https://hembromrohanjohn-bot.github.io/bombon-menu/",
 
-  // Café WhatsApp number that receives orders: country code + number,
-  // digits only, no "+", spaces or leading zero — e.g. "919876543210".
-  whatsapp: "",
-
-  // Google Sheet order log: the Apps Script "Web app URL" (ends in /exec). Leave "" to turn it off.
-  // Setup: README.md → "Order log (Google Sheet)".
+  // Orders backend: the Google Apps Script "Web app URL" (ends in /exec).
+  // Empty = guests can browse but not order. Setup: README.md → "Orders backend".
   ordersUrl: "",
 
   // Tables are numbered 1 … tables. Links with any other table number are ignored.
