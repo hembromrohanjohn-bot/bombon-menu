@@ -29,41 +29,26 @@ then open http://localhost:8000
 Live menu: **https://hembromrohanjohn-bot.github.io/bombon-menu/**
 Orders board (staff only): **https://hembromrohanjohn-bot.github.io/bombon-orders/** (separate repo `bombon-orders`)
 
-Each of the 40 tables has a QR code that opens the menu as `…/?table=10`. In that mode every dish gets a **+** button and
-an order bar appears. The guest reviews the order (quantities, a note per dish, their name) and taps **Place order**.
-The order goes straight to the orders backend, the guest sees "Order received", and it pops up on the orders board.
+Each of the 40 tables has a QR code that opens the menu as `…/?table=10`. In that mode every dish gets a **+ Add** button
+and an order bar appears. The guest reviews the order (quantities, a note per dish, their name) and taps **Place order**.
+The order is saved to Firebase and pops up on the orders board within a second or two; the guest sees "Thank you!".
 
-- `config.js` — `siteUrl` (where the menu is published), `ordersUrl` (the orders backend, see below), `tables` (40)
-- `tables.html` — printable QR table cards (A6, four per A4 sheet, dashed cut lines). Shows a warning while ordering isn't connected.
+- `config.js` — `siteUrl`, `tables` (40), and the public `firebase` settings (set to `null` to switch ordering off)
+- `tables.html` — printable QR table cards (A6, four per A4 sheet, dashed cut lines)
 - `order.js` — the basket and order sending. It only switches on for a valid `?table=` (1 … `tables`); the plain menu and print are unchanged.
-- `google-sheet/Code.gs` — the orders backend (Google Apps Script)
 - The basket is kept on the guest's phone for 3 hours, and each table has its own basket.
 - If sending fails, the guest keeps their basket and can retry. A retry can't create a duplicate order.
 
-## Orders backend (Google Sheet)
-Orders are stored in a Google Sheet you own: time, ref, table, guest, items, quantity, subtotal, service, total, note and
-**Status** (New → Preparing → Served / Cancelled). A **Daily totals** tab adds up orders and revenue per day. The orders
-board reads and updates this sheet; you can also open the sheet directly at any time.
+## Orders backend (Firebase)
+Firebase project **bombon-orders-ucwmp** (console: https://console.firebase.google.com/project/bombon-orders-ucwmp).
+Orders are stored in Firestore (Mumbai, asia-south1) at `restaurants/bombon/orders`.
 
-**One-time setup (about 5 minutes):**
-1. Go to [sheets.new](https://sheets.new) and name the sheet, e.g. *Bombon orders*.
-2. **Extensions → Apps Script**. Delete what's there, paste all of `google-sheet/Code.gs`, and save.
-3. **Project Settings** (gear icon) → **Time zone** → *(GMT+05:30) India Standard Time*.
-4. Back in the editor, choose `setup` in the function dropdown → **Run** → allow the permissions it asks for
-   (Google shows "unverified app" because it's your own script: *Advanced → Go to … (unsafe)*).
-   This creates the *Orders*, *Daily totals* and *Settings* tabs. The **staff key** for the orders board is in *Settings*.
-5. **Deploy → New deployment** → type **Web app** → *Execute as*: **Me**, *Who has access*: **Anyone** → **Deploy**.
-6. Copy the **Web app URL** (ends in `/exec`) into `ordersUrl` in this repo's `config.js` **and** `apiUrl` in the
-   `bombon-orders` repo's `config.js`.
-
-If you change `Code.gs` later: **Deploy → Manage deployments → Edit → Version: New version**, so the URL stays the same.
-New staff key: Apps Script → Project Settings → Script properties → delete `STAFF_KEY`, then run `setup` again.
-
-Safeguards: only well-formed orders for tables 1–40 are accepted, totals are recalculated by the script, text is
-length-limited and can't run as a formula, a repeated ref is ignored, and one table can't send more than 15 orders in
-10 minutes. Reading orders and changing their status needs the staff key. Placing an order doesn't (guests need that),
-so someone could still send a fake order, and anyone could edit the table number in the link. Staff should sanity-check
-unusual orders.
+- Security rules: `firebase/firestore.rules` in the `bombon-orders` repo. Guests can only *create* well-formed orders for
+  tables 1–40 (they can't list, change or delete orders). Only the staff login can see orders and change their status.
+- Staff sign in to the orders board as username `staff` (Firebase user `staff@bombon.staff`). To add another login, create
+  the user under Authentication → Users and add its email to `isStaff()` in the rules.
+- Limits: placing an order has to stay open to guests, so someone could still send a fake order, and anyone could edit
+  the table number in the link. Staff should sanity-check unusual orders.
 
 ## Editing items
 `menu-data.js` has three tabs (`drinks`, `food`, `sweets`), each a list of sections:

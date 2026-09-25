@@ -111,7 +111,7 @@ from.oninput = to.oninput = draw;
 
 const warn = [];
 if(/example\.github\.io/.test(CONFIG.siteUrl)) warn.push("<b>siteUrl</b> in <code>config.js</code> is still the placeholder — these codes won't open your menu. Don't print yet.");
-if(!CONFIG.ordersUrl) warn.push("<b>ordersUrl</b> in <code>config.js</code> is empty — guests can browse the menu but can't place orders yet.");
+if(!CONFIG.firebase) warn.push("<b>firebase</b> in <code>config.js</code> is empty — guests can browse the menu but can't place orders.");
 document.getElementById("warn").innerHTML = warn.map(w => `<div class="warn">${w}</div>`).join("");
 draw();
 </script>
