@@ -1,8 +1,8 @@
 /* ============================================================
    Table ordering — only active when the page is opened from a
    table QR code (index.html?table=10). Guests tap + ADD, review the
-   order and tap "Place order"; it goes straight to the orders board
-   through the backend in config.js (ordersUrl).
+   order and tap "Place order"; it is saved to Firebase (config.js)
+   and shows up on the orders board straight away.
    ============================================================ */
 (function () {
   const t = new URLSearchParams(location.search).get("table") || "";
@@ -40,8 +40,34 @@
     let tag = ""; for (let i = 0; i < 3; i++) tag += abc[Math.floor(Math.random() * abc.length)];
     return `T${TABLE}-${hhmm}-${tag}`;
   }
-  let ref = newRef(), attempted = false, sending = false;
-  const touched = () => { if (attempted) { ref = newRef(); attempted = false; } };
+  // Each order also gets a random Firestore document id. A retry reuses both, so a slow first
+  // attempt that did reach the kitchen is recognised instead of creating a second order.
+  const newDocId = () => { const a = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789"; let s = ""; const r = crypto.getRandomValues(new Uint8Array(20)); for (const b of r) s += a[b % a.length]; return s; };
+  let ref = newRef(), docId = newDocId(), attempted = false, sending = false;
+  const touched = () => { if (attempted) { ref = newRef(); docId = newDocId(); attempted = false; } };
+
+  /* ---------- Firebase (loaded only when a guest places an order) ---------- */
+  let fb = null;
+  async function firebase() {
+    if (fb) return fb;
+    const SDK = "https://www.gstatic.com/firebasejs/12.19.0/";
+    const { initializeApp } = await import(SDK + "firebase-app.js");
+    const fs = await import(SDK + "firebase-firestore.js");
+    fb = { ...fs, db: fs.getFirestore(initializeApp(CONFIG.firebase)) };
+    return fb;
+  }
+  const withTimeout = (p, ms) => Promise.race([p, new Promise((_, no) => setTimeout(() => no(Object.assign(new Error("Timed out"), { name: "AbortError" })), ms))]);
+  async function saveOrder(id, order) {
+    const f = await withTimeout(firebase(), 15000);
+    const ref = f.doc(f.db, "restaurants", "bombon", "orders", id);
+    try {
+      await withTimeout(f.setDoc(ref, { ...order, status: "new", placedAt: f.serverTimestamp() }), 15000);
+    } catch (err) {
+      // A slow write may still have reached the kitchen, or this is a retry of one that did.
+      try { if ((await withTimeout(f.getDocFromServer(ref), 8000)).exists()) return; } catch (_) {}
+      throw err;
+    }
+  }
 
   /* ---------- + ADD / − n + controls (drawn by app.js through ORDER.ctl) ---------- */
   const stepperHTML = (id, q) => {
@@ -136,22 +162,19 @@
   $("#s-send").addEventListener("click", async () => {
     $("#s-err").hidden = true;
     if (!count()) return fail("Add something to your order first.");
-    if (!CONFIG.ordersUrl) return fail("Ordering from the table isn't switched on yet. Please order with your server.");
-    const n = count(), total = subtotal() * (1 + CONFIG.serviceCharge);
-    const body = JSON.stringify({
-      ref, table: TABLE, name: cart.name.trim(), note: cart.note.trim(),
-      items: lines().map(l => ({ name: label(l.id), qty: l.qty, price: l.price, note: l.note.trim() })),
-    });
+    if (!CONFIG.firebase) return fail("Ordering from the table isn't switched on yet. Please order with your server.");
+    const n = count(), sub = subtotal(), service = Math.round(sub * CONFIG.serviceCharge), total = sub + service;
+    const order = {
+      ref, table: TABLE, name: cart.name.trim().slice(0, 40), note: cart.note.trim().slice(0, 300),
+      items: lines().map(l => ({ name: label(l.id), qty: l.qty, price: l.price, note: l.note.trim().slice(0, 80) })),
+      qty: n, subtotal: sub, service, total,
+    };
     attempted = true; sending = true;
     const btn = $("#s-send"); btn.disabled = true; btn.textContent = "Sending…";
-    const ctl = new AbortController(), timer = setTimeout(() => ctl.abort(), 20000);
     try {
-      // text/plain keeps this a "simple" request, so it works cross-origin with Apps Script.
-      const res = await fetch(CONFIG.ordersUrl, { method: "POST", body, headers: { "Content-Type": "text/plain;charset=utf-8" }, signal: ctl.signal });
-      const out = await res.json();
-      if (!out.ok) throw new Error(out.error || "not accepted");
+      await saveOrder(docId, order);
       const placed = ref;
-      cart = { lines: {}, name: cart.name, note: "" }; ref = newRef(); attempted = false; save();
+      cart = { lines: {}, name: cart.name, note: "" }; ref = newRef(); docId = newDocId(); attempted = false; save();
       document.querySelectorAll(".ctl[data-id]").forEach(el => el.innerHTML = ORDER.ctl(el.dataset.id));
       bar();
       $("#s-foot").hidden = true;
@@ -163,11 +186,12 @@
       $("#s-more").focus();
       live.textContent = `Order received for table ${TABLE}.`;
     } catch (err) {
+      console.warn("[order] not placed:", err);
       const msg = err.name === "AbortError" ? "No reply from the kitchen." :
-        /table|quantity|price|item|ref|order/i.test(err.message) ? `The order couldn't be placed (${err.message}).` : "Couldn't reach the kitchen.";
+        err.code === "permission-denied" ? "The kitchen couldn't accept this order." : "Couldn't reach the kitchen.";
       fail(msg + " Check your connection and tap Place order again, or ask your server.");
     } finally {
-      clearTimeout(timer); sending = false; btn.textContent = "Place order";
+      sending = false; btn.textContent = "Place order";
       if (!$("#s-foot").hidden) $("#s-send").disabled = !count();
     }
   });
