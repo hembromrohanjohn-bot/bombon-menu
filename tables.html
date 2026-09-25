@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Bombon Table QR Cards</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght,SOFT,WONK@0,9..144,300..600,50..100,0..1;1,9..144,300..500,50..100,0..1&family=Cormorant+Garamond:ital,wght@0,500;0,600;0,700;1,500&family=Karla:ital,wght@0,400;0,500;1,400&family=Caveat:wght@500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --paper:#EFE7DA;--paper-deep:#E6DBC9;--card:#F4EEE3;--ink:#2B1D14;--ink-soft:#6A5646;
+  --clay:#A9532F;--olive:#6E6B4A;--ochre:#B98C3E;--rule:rgba(43,29,20,.28);
+  --f-display:"Fraunces",Georgia,serif;--f-name:"Cormorant Garamond",Georgia,serif;--f-body:"Karla",system-ui,sans-serif;--f-hand:"Caveat",cursive;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--paper-deep);color:var(--ink);font:15px/1.45 var(--f-body);-webkit-font-smoothing:antialiased}
+
+/* ---------- screen toolbar ---------- */
+.tools{max-width:1000px;margin:0 auto;padding:28px 16px 8px}
+.tools h1{font:400 34px var(--f-display);font-variation-settings:"opsz" 72,"SOFT" 60;margin-bottom:6px}
+.tools p{color:var(--ink-soft);max-width:70ch;margin-bottom:10px}
+.tools code{background:var(--paper);padding:1px 5px;border-radius:3px;font-size:13px}
+.warn{background:#F6E3D6;border:1px solid #D9A58A;border-left:4px solid var(--clay);padding:10px 14px;border-radius:3px;margin:10px 0;color:#5A2A15}
+.row{display:flex;flex-wrap:wrap;align-items:end;gap:12px;margin:14px 0 4px}
+.row label{font:600 14px var(--f-name);letter-spacing:.06em;display:flex;flex-direction:column;gap:4px}
+.row input{width:90px;min-height:44px;padding:8px 10px;border:1px solid var(--rule);border-radius:3px;background:#FBF7EE;font:15px var(--f-body)}
+.row button{appearance:none;cursor:pointer;min-height:44px;padding:0 20px;border-radius:3px;border:1px solid var(--clay);
+  background:var(--clay);color:#FBF3E6;font:700 17px var(--f-name);font-variant:small-caps;letter-spacing:.08em}
+
+/* ---------- cards: A6 (105 × 148 mm), four per A4 sheet ---------- */
+.sheets{display:flex;flex-wrap:wrap;justify-content:center;gap:18px;padding:18px 16px 60px}
+.card{
+  width:105mm;height:148mm;background:var(--card);position:relative;overflow:hidden;
+  display:flex;flex-direction:column;align-items:center;text-align:center;padding:9mm 8mm 7mm;
+  box-shadow:0 12px 30px -18px rgba(43,29,20,.55);
+}
+.card::before{content:"";position:absolute;inset:4.5mm;border:.35mm solid var(--rule);outline:.35mm solid var(--rule);outline-offset:1.2mm;pointer-events:none}
+.est{font:600 7.5pt var(--f-name);letter-spacing:.3em;text-transform:uppercase;color:var(--olive)}
+.logo{font:400 30pt/1 var(--f-display);font-variation-settings:"opsz" 144,"SOFT" 100,"WONK" 1;margin:1.5mm 0 2mm}
+.logo em{font-style:italic;color:var(--clay);font-weight:300}
+.tbl{display:flex;align-items:center;gap:3mm;font:700 10pt var(--f-name);letter-spacing:.34em;text-transform:uppercase;color:var(--clay)}
+.tbl::before,.tbl::after{content:"";width:9mm;height:.3mm;background:var(--ochre)}
+.num{font:350 40pt/1 var(--f-display);font-variation-settings:"opsz" 144,"SOFT" 100;margin:.5mm 0 3mm}
+.qr{width:62mm;height:62mm;display:block;border-radius:1.5mm}
+.cta{font:italic 500 12.5pt/1.2 var(--f-name);margin-top:3mm}
+.steps{display:flex;gap:3.5mm;margin-top:2mm;font:500 7.3pt var(--f-body);color:var(--ink-soft)}
+.steps b{display:inline-grid;place-items:center;width:3.6mm;height:3.6mm;border-radius:50%;background:var(--clay);color:#FBF3E6;font-size:6pt;margin-right:1mm;vertical-align:.2mm}
+.hand{font:500 14pt var(--f-hand);color:var(--clay);transform:rotate(-3deg);margin-top:auto}
+.link{display:block;margin-top:6px;font-size:12px;color:var(--ink-soft);word-break:break-all;text-align:center;max-width:105mm}
+.link a{color:var(--clay)}
+
+@page{size:A4;margin:0}
+@media print{
+  *{-webkit-print-color-adjust:exact;print-color-adjust:exact}
+  body{background:#fff}
+  .tools,.link{display:none}
+  .sheets{display:grid;grid-template-columns:105mm 105mm;grid-auto-rows:148.5mm;gap:0;padding:0;width:210mm}
+  .cell:nth-child(4n){break-after:page}
+  .card{box-shadow:none;height:148.5mm;outline:.1mm dashed #bbb}   /* dashed = cut lines */
+}
+</style>
+</head>
+<body>
+<div class="tools">
+  <h1>Table QR cards</h1>
+  <p>One card per table, four to an A4 sheet. Print it (Cmd+P, A4, margins <b>None</b>, <b>Background graphics</b> on), then cut along the dashed lines. Each code opens the menu with ordering for that table.</p>
+  <div id="warn"></div>
+  <div class="row">
+    <label>From table<input id="from" type="number" min="1"></label>
+    <label>To table<input id="to" type="number" min="1"></label>
+    <button type="button" onclick="print()">Print cards</button>
+  </div>
+</div>
+<div class="sheets" id="sheets"></div>
+
+<script src="config.js"></script>
+<script src="vendor/qrcode.js"></script>
+<script>
+const base = CONFIG.siteUrl.replace(/\/?$/, "/");
+const urlFor = n => base + "?table=" + n;
+
+function qrSvg(text){
+  const q = qrcode(0, "M"); q.addData(text); q.make();
+  const n = q.getModuleCount(), pad = 3, size = n + pad*2;
+  let d = "";
+  for(let r = 0; r < n; r++) for(let c = 0; c < n; c++) if(q.isDark(r, c)) d += `M${c+pad} ${r+pad}h1v1h-1z`;
+  return `<svg class="qr" viewBox="0 0 ${size} ${size}" shape-rendering="crispEdges" role="img" aria-label="QR code: ${text}">`+
+         `<rect width="${size}" height="${size}" fill="#FBF7EE"/><path d="${d}" fill="#2B1D14"/></svg>`;
+}
+
+function card(n){
+  const url = urlFor(n);
+  return `<div class="cell"><div class="card">
+    <div class="est">Café · Coffee Bar</div>
+    <div class="logo">Bomb<em>o</em>n</div>
+    <div class="tbl">Table</div>
+    <div class="num">${n}</div>
+    ${qrSvg(url)}
+    <div class="cta">Scan to see the menu &amp; order</div>
+    <div class="steps"><span><b>1</b>Scan</span><span><b>2</b>Add dishes</span><span><b>3</b>Send on WhatsApp</span></div>
+    <div class="hand">Linger longer.</div>
+  </div><div class="link">test: <a href="${url}" target="_blank" rel="noopener">${url}</a></div></div>`;
+}
+
+const from = document.getElementById("from"), to = document.getElementById("to");
+from.value = 1; to.value = CONFIG.tables; from.max = to.max = CONFIG.tables;
+function draw(){
+  const a = Math.max(1, Math.min(+from.value || 1, CONFIG.tables)), b = Math.max(a, Math.min(+to.value || a, CONFIG.tables));
+  let html = ""; for(let n = a; n <= b; n++) html += card(n);
+  document.getElementById("sheets").innerHTML = html;
+}
+from.oninput = to.oninput = draw;
+
+const warn = [];
+if(/example\.github\.io/.test(CONFIG.siteUrl)) warn.push("<b>siteUrl</b> in <code>config.js</code> is still the placeholder — these codes won't open your menu. Don't print yet.");
+if(!/^\d{8,15}$/.test(CONFIG.whatsapp)) warn.push("<b>whatsapp</b> in <code>config.js</code> is empty — guests can browse but can't send orders.");
+document.getElementById("warn").innerHTML = warn.map(w => `<div class="warn">${w}</div>`).join("");
+draw();
+</script>
+</body>
+</html>

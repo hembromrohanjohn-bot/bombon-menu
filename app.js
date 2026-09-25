@@ -10,8 +10,10 @@ function mark(d, extra="", decorative=false){
     (d==="nonveg" ? `<path d="M7 3.3l3.7 6.5H3.3z"/>` : `<circle cx="7" cy="7" r="3.1"/>`)+`</svg>`;
 }
 
+const ITEMS = [];   // every rendered item, indexed by data-key (used by order.js)
 function item(it){
-  return `<div class="item" data-diet="${it.diet}"><div class="row"><span class="name">${mark(it.diet)}${esc(it.name)}${it.option?`<small>${esc(it.option)}</small>`:""}</span>`+
+  const key = ITEMS.push(it) - 1;
+  return `<div class="item" data-diet="${it.diet}" data-key="${key}"><div class="row"><span class="name">${mark(it.diet)}${esc(it.name)}${it.option?`<small>${esc(it.option)}</small>`:""}</span>`+
     (it.price!=null?`<span class="lead"></span><span class="price">${it.price}</span>`:"")+`</div>`+
     (it.desc?`<p class="desc">${esc(it.desc)}</p>`:"")+
     (it.addons&&it.addons.length?`<div class="addons"><div class="addon-h">add-ons</div>`+
