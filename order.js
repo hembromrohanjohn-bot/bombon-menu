@@ -69,6 +69,49 @@
     }
   }
 
+  /* ---------- placed orders: remembered on this phone and followed live ---------- */
+  const PLACED = "bombon-placed-" + TABLE, KEEP = 12 * 3600e3;
+  let placed = [];
+  try { placed = (JSON.parse(localStorage.getItem(PLACED) || "[]") || []).filter(o => o && o.id && Date.now() - o.at < KEEP); } catch (e) {}
+  const savePlaced = () => { try { localStorage.setItem(PLACED, JSON.stringify(placed)); } catch (e) {} };
+  const STEP = { new: 0, preparing: 1, served: 2 };
+  const STATUS_TEXT = { new: "Received", preparing: "Preparing", served: "Served", cancelled: "Cancelled" };
+  const finished = o => o.status === "served" || o.status === "cancelled";
+  // The bar keeps offering "Track your order" until 30 minutes after the last order is served.
+  const trackable = () => placed.filter(o => !finished(o) || Date.now() - (o.statusAt || o.at) < 30 * 60e3);
+  const watching = {};
+  async function watch(o) {
+    if (watching[o.id] || !CONFIG.firebase || finished(o) && Date.now() - (o.statusAt || o.at) > 30 * 60e3) return;
+    watching[o.id] = true;
+    try {
+      const f = await firebase();
+      f.onSnapshot(f.doc(f.db, "restaurants", "bombon", "orders", o.id), snap => {
+        if (!snap.exists()) return;
+        const st = snap.get("status"), at = snap.get("statusAt");
+        if (st === o.status) return;
+        o.status = st; o.statusAt = at && at.toMillis ? at.toMillis() : Date.now();
+        savePlaced(); bar(); if (sheet.open) redrawOrders();
+        live.textContent = `Order ${o.ref}: ${STATUS_TEXT[st] || st}.`;
+      }, () => { watching[o.id] = false; });
+    } catch (e) { watching[o.id] = false; }
+  }
+  function trackerHTML(o) {
+    const step = STEP[o.status] ?? 0, when = new Date(o.at).toLocaleTimeString([], { hour: "numeric", minute: "2-digit" });
+    const steps = ["Received", "Preparing", "Served"].map((t, i) =>
+      `<li class="${o.status !== "cancelled" && i <= step ? "done" : ""}${o.status !== "cancelled" && i === step ? " now" : ""}"><span class="dot" aria-hidden="true"></span>${t}</li>`).join("");
+    return `<div class="track" data-order="${esc(o.id)}">
+      <div class="track-head"><b>${esc(o.ref)}</b><span>${when} · ${o.n} item${o.n === 1 ? "" : "s"} · ${money(o.total)}</span></div>
+      ${o.status === "cancelled" ? `<p class="track-cancel">This order was cancelled. Please ask your server.</p>` : `<ol class="steps" aria-label="Order status: ${STATUS_TEXT[o.status] || "Received"}">${steps}</ol>`}
+      <p class="track-items">${o.items.map(i => `${i.qty}× ${esc(i.name)}`).join(", ")}</p>
+    </div>`;
+  }
+  const ordersHTML = (heading = true) => placed.length
+    ? (heading ? `<h3 class="orders-h">Your orders at Table ${TABLE}</h3>` : "") + placed.slice().reverse().map(trackerHTML).join("")
+    : "";
+  function redrawOrders() {
+    const box = $("#s-orders"); if (box) box.innerHTML = ordersHTML(box.classList.contains("orders-below"));
+  }
+
   /* ---------- + ADD / − n + controls (drawn by app.js through ORDER.ctl) ---------- */
   const stepperHTML = (id, q) => {
     const n = esc(byId(id).name);
@@ -108,7 +151,7 @@
   const strip = document.getElementById("table-strip");
   strip.textContent = `Table ${TABLE}`; strip.hidden = false;
   document.body.insertAdjacentHTML("beforeend", `
-  <div class="orderbar" id="orderbar" hidden><button type="button" id="ob-open"><span id="ob-sum"></span><span class="cta">Review order</span></button></div>
+  <div class="orderbar" id="orderbar" hidden><button type="button" id="ob-open"><span id="ob-sum"></span><span class="cta" id="ob-cta">Review order</span></button></div>
   <dialog class="sheet" id="sheet" aria-labelledby="s-title">
     <div class="s-head"><h2 id="s-title">Your order<span class="pill">Table ${TABLE}</span></h2><button type="button" class="x" id="s-x" aria-label="Close">×</button></div>
     <div class="s-body" id="s-body"></div>
@@ -123,14 +166,31 @@
   const sheet = $("#sheet");
 
   function bar() {
-    const n = count();
-    $("#orderbar").hidden = n === 0;
-    document.documentElement.classList.toggle("has-order", n > 0);
-    $("#ob-sum").innerHTML = `<span class="tbl">Table ${TABLE} <span class="dot">·</span> </span>${n} item${n === 1 ? "" : "s"} <span class="dot">·</span> ${money(subtotal())}`;
+    const n = count(), t = trackable();
+    const show = n > 0 || t.length > 0;
+    $("#orderbar").hidden = !show;
+    document.documentElement.classList.toggle("has-order", show);
+    $("#orderbar").classList.toggle("tracking", n === 0 && t.length > 0);
+    if (n > 0) {
+      $("#ob-sum").innerHTML = `<span class="tbl">Table ${TABLE} <span class="dot">·</span> </span>${n} item${n === 1 ? "" : "s"} <span class="dot">·</span> ${money(subtotal())}`;
+      $("#ob-cta").textContent = "Review order";
+    } else if (t.length) {
+      const latest = t[t.length - 1], open = t.filter(o => !finished(o)).length;
+      $("#ob-sum").innerHTML = `<span class="live-dot ${esc(latest.status)}" aria-hidden="true"></span>`
+        + (t.length > 1 ? `${t.length} orders <span class="dot">·</span> ${open ? `${open} in progress` : "all served"}` : `Your order <span class="dot">·</span> ${STATUS_TEXT[latest.status] || "Received"}`);
+      $("#ob-cta").textContent = "Track";
+    }
   }
 
   function drawSheet() {
     const ls = lines(), sub = subtotal(), svc = sub * CONFIG.serviceCharge;
+    $("#s-title").firstChild.textContent = ls.length || !placed.length ? "Your order" : "Your orders";
+    if (!ls.length && placed.length) {                     // nothing in the basket: just track what was ordered
+      $("#s-body").innerHTML = `<div id="s-orders">${ordersHTML(false)}</div><button type="button" class="primary ghost" id="s-add">Add more dishes</button>`;
+      $("#s-add").addEventListener("click", () => sheet.close());
+      $("#s-foot").hidden = true;
+      return;
+    }
     $("#s-body").innerHTML = (ls.length ? ls.map(l => {
       const it = byId(l.id);
       return `<div class="oline" data-id="${esc(l.id)}">
@@ -139,7 +199,8 @@
       </div>`;
     }).join("") : `<p class="fine">Your order is empty. Tap + Add on any dish.</p>`)
       + `<label class="fld">Your name <em>(optional)</em><input id="o-name" autocomplete="given-name" maxlength="40" value="${esc(cart.name)}"></label>`
-      + `<label class="fld">Anything else for the kitchen? <em>(optional)</em><textarea id="o-note" rows="2" maxlength="300" placeholder="Allergies, or bring everything together">${esc(cart.note)}</textarea></label>`;
+      + `<label class="fld">Anything else for the kitchen? <em>(optional)</em><textarea id="o-note" rows="2" maxlength="300" placeholder="Allergies, or bring everything together">${esc(cart.note)}</textarea></label>`
+      + `<div id="s-orders" class="orders-below">${ordersHTML()}</div>`;
     $("#s-sum").innerHTML = ls.length ? `<span>Items</span><span>${money(sub)}</span><span>Service ${pct}%</span><span>${money(svc)}</span><span class="grand">Estimated total</span><span class="grand">${money(sub + svc)}</span>` : "";
     $("#s-send").disabled = !ls.length || sending;
     $("#s-foot").hidden = false;
@@ -173,15 +234,17 @@
     const btn = $("#s-send"); btn.disabled = true; btn.textContent = "Sending…";
     try {
       await saveOrder(docId, order);
-      const placed = ref;
+      const mine = { id: docId, ref, n, total, at: Date.now(), status: "new", statusAt: null, items: order.items.map(i => ({ name: i.name, qty: i.qty })) };
+      placed.push(mine); savePlaced(); watch(mine);
       cart = { lines: {}, name: cart.name, note: "" }; ref = newRef(); docId = newDocId(); attempted = false; save();
       document.querySelectorAll(".ctl[data-id]").forEach(el => el.innerHTML = ORDER.ctl(el.dataset.id));
       bar();
       $("#s-foot").hidden = true;
       $("#s-body").innerHTML = `<div class="done"><div class="tick" aria-hidden="true">✓</div><h3>Thank you!</h3>
         <p>Your order is with the kitchen. We'll bring it to <b>Table ${TABLE}</b>.</p>
-        <p class="ref">Ref ${placed} · ${n} item${n === 1 ? "" : "s"} · about ${money(total)} incl. service</p>
-        <button type="button" class="primary" id="s-more" style="margin-top:14px">Back to the menu</button></div>`;
+        <p class="fine">You can follow it here, or any time from the bar at the bottom of the menu.</p></div>
+        <div id="s-orders">${ordersHTML(false)}</div>
+        <button type="button" class="primary" id="s-more" style="margin-top:14px">Back to the menu</button>`;
       $("#s-more").addEventListener("click", () => sheet.close());
       $("#s-more").focus();
       live.textContent = `Order received for table ${TABLE}.`;
@@ -196,5 +259,6 @@
     }
   });
 
+  placed.forEach(watch);   // follow orders placed earlier (e.g. after the page was reloaded)
   render();          // redraw the menu with + Add buttons (render() is in app.js)
 })();

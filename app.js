@@ -94,15 +94,23 @@ function after() {
   if (window.ORDER) ORDER.refresh();
 }
 
+// A section is "current" once its heading is within this many px under the sticky bar.
+// It must be larger than JUMP_GAP, or tapping a section link would highlight the one before it.
+const JUMP_GAP = 10, SPY_ZONE = 40;
+let jumpLock = 0;                      // while a tapped link is scrolling into place, keep it highlighted
 function spy() {
+  if (Date.now() < jumpLock) return;
   const secs = [...document.querySelectorAll("section.sec")];
-  const barH = $("#bar").getBoundingClientRect().bottom + 10;
+  const barH = $("#bar").getBoundingClientRect().bottom + SPY_ZONE;
   let cur = secs[0];
   for (const s of secs) if (s.getBoundingClientRect().top <= barH) cur = s;
   if (window.innerHeight + window.scrollY >= document.documentElement.scrollHeight - 4) cur = secs[secs.length - 1];
+  highlight(cur && cur.id);
+}
+function highlight(id) {
   const row = $("#chips");
   row.querySelectorAll(".chip").forEach(c => {
-    const on = cur && c.dataset.target === cur.id;
+    const on = c.dataset.target === id;
     // Scroll only the chip row sideways; scrollIntoView would also move the page
     if (on && !c.classList.contains("on")) row.scrollTo({ left: c.offsetLeft - (row.clientWidth - c.offsetWidth) / 2 });
     c.classList.toggle("on", on);
@@ -144,9 +152,16 @@ document.querySelector(".diet").addEventListener("click", e => {
   const n = document.querySelectorAll("#pages .item").length;
   $("#live").textContent = state.diet === "all" ? `Showing all ${n} dishes` : `Showing ${n} ${state.diet === "veg" ? "vegetarian" : "non-vegetarian"} dishes`;
 });
+function jumpTo(id) {
+  const sec = document.getElementById(id); if (!sec) return;
+  const y = sec.getBoundingClientRect().top + window.scrollY - $("#bar").offsetHeight - JUMP_GAP;
+  jumpLock = Date.now() + 600;
+  highlight(id);
+  window.scrollTo({ top: Math.max(0, y), behavior: "auto" });
+}
 $("#chips").addEventListener("click", e => {
   const c = e.target.closest(".chip"); if (!c) return;
-  document.getElementById(c.dataset.target).scrollIntoView();
+  jumpTo(c.dataset.target);
 });
 $("#picks").addEventListener("click", () => { state.picks = !state.picks; render(); toTop(); });
 $("#pages").addEventListener("click", e => {
