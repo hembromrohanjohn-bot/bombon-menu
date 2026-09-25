@@ -190,6 +190,32 @@ footer .concept { font-family: var(--display); font-weight: 400; font-size: 19px
 .done p { margin: 0 0 6px; font-size: 17px; }
 .done .ref { font-family: var(--cond); font-weight: 400; letter-spacing: .1em; text-transform: uppercase; font-size: 14px; color: var(--ink-soft); }
 
+/* order tracking */
+.orderbar.tracking button { background: var(--tinta); }
+.live-dot { display: inline-block; width: 10px; height: 10px; border-radius: 50%; margin-right: 8px; background: var(--azafran); box-shadow: 0 0 0 0 rgba(232,166,35,.6); animation: pulse 1.6s infinite; vertical-align: 1px; }
+.live-dot.preparing { background: #F0B44C; }
+.live-dot.served { background: #58C27D; animation: none; }
+.live-dot.cancelled { background: #E5484D; animation: none; }
+@keyframes pulse { 70% { box-shadow: 0 0 0 8px rgba(232,166,35,0); } 100% { box-shadow: 0 0 0 0 rgba(232,166,35,0); } }
+.orders-h { margin: 18px 0 8px; font-family: var(--display); font-weight: 400; font-size: 20px; letter-spacing: .04em; text-transform: uppercase; color: var(--rojo); }
+.orders-below:empty { display: none; }
+.orders-below { margin-top: 18px; border-top: 1px solid var(--line); }
+.track { margin: 10px 0; padding: 12px 14px; border-radius: 12px; border: 1.5px solid var(--line); background: #FFFAEE; }
+.track-head { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; flex-wrap: wrap; }
+.track-head b { font-family: var(--cond); font-weight: 400; font-size: 17px; letter-spacing: .06em; }
+.track-head span { font-size: 14px; color: var(--ink-soft); }
+.steps { list-style: none; margin: 12px 0 8px; padding: 0; display: grid; grid-template-columns: repeat(3, 1fr); position: relative; }
+.steps::before { content: ""; position: absolute; left: 16.6%; right: 16.6%; top: 7px; height: 2px; background: var(--line); }
+.steps li { position: relative; display: grid; justify-items: center; gap: 6px; font-family: var(--cond); font-size: 14px; letter-spacing: .06em; text-transform: uppercase; color: var(--ink-soft); }
+.steps .dot { width: 16px; height: 16px; border-radius: 50%; background: #fff; border: 2px solid var(--line); position: relative; z-index: 1; }
+.steps li.done { color: var(--tinta); }
+.steps li.done .dot { background: var(--veg); border-color: var(--veg); }
+.steps li.now .dot { box-shadow: 0 0 0 4px rgba(30,142,62,.2); }
+.track-items { margin: 0; font-size: 14px; color: var(--ink-soft); font-style: italic; }
+.track-cancel { margin: 8px 0; color: #8A1C0C; font-weight: 500; }
+.primary.ghost { background: transparent; color: var(--rojo); border: 1.5px solid var(--rojo); margin-top: 12px; }
+@media (prefers-reduced-motion: reduce) { .live-dot { animation: none; } }
+
 @media (max-width: 420px) {
   .bar-top { gap: 8px; padding: 12px 12px 8px; }
   .tabs button { padding: 6px 10px; font-size: 15px; }
