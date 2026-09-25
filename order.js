@@ -155,7 +155,7 @@
       document.querySelectorAll(".ctl[data-id]").forEach(el => el.innerHTML = ORDER.ctl(el.dataset.id));
       bar();
       $("#s-foot").hidden = true;
-      $("#s-body").innerHTML = `<div class="done"><div class="tick" aria-hidden="true">✓</div><h3>¡Gracias!</h3>
+      $("#s-body").innerHTML = `<div class="done"><div class="tick" aria-hidden="true">✓</div><h3>Thank you!</h3>
         <p>Your order is with the kitchen. We'll bring it to <b>Table ${TABLE}</b>.</p>
         <p class="ref">Ref ${placed} · ${n} item${n === 1 ? "" : "s"} · about ${money(total)} incl. service</p>
         <button type="button" class="primary" id="s-more" style="margin-top:14px">Back to the menu</button></div>`;

@@ -50,13 +50,13 @@ function renderPicks() {
   const tab = state.tab, q = state.q.trim().toLowerCase();
   const rows = SIGNATURES[tab].map((name, i) => {
     const [sec, it] = findItem(tab, name);
-    if (!it || !dietOk(it) || (q && ![name, it.desc, sec.es, sec.en].join(" ").toLowerCase().includes(q))) return "";
+    if (!it || !dietOk(it) || (q && ![name, it.desc, sec.title].join(" ").toLowerCase().includes(q))) return "";
     return `<div class="item pick" data-id="${esc(it.id)}"><span class="rank">${i + 1}</span><h3>${markHTML(it)}<span class="nm">${esc(name)}</span>${it.diet === "egg" ? '<span class="tag egg">EGG</span>' : ""}</h3><div class="price">${fmt(it.price)}</div>`
-      + `<div class="from">${esc(sec.es)}${sec.en ? ` · ${esc(sec.en)}` : ""}</div>${it.desc ? `<p>${esc(it.desc)}</p>` : ""}`
+      + `<div class="from">${esc(sec.title)}</div>${it.desc ? `<p>${esc(it.desc)}</p>` : ""}`
       + `<button class="jump" data-sec="${sec.id}" data-name="${esc(name)}">See it on the menu</button>${ctlHTML(it)}</div>`;
   }).join("");
   $("#pages").innerHTML = rows
-    ? `<section class="sec" id="signatures"><div class="sec-head"><h2>Signatures</h2><span class="en">(${TABS[tab]})</span></div><p class="picks-intro">The house signatures, the ${tab === "drinks" ? "drinks" : "plates"} Bombon is built around.</p>${rows}</section>`
+    ? `<section class="sec" id="signatures"><div class="sec-head"><h2>${TABS[tab]} Signatures</h2></div><p class="picks-intro">The house signatures, the ${tab === "drinks" ? "drinks" : "plates"} Bombon is built around.</p>${rows}</section>`
     : emptyHTML(q);
   $("#chips").innerHTML = "";
   $("#picks").setAttribute("aria-pressed", "true");
@@ -74,11 +74,11 @@ function render() {
   const match = (...parts) => !q || parts.join(" ").toLowerCase().includes(q);
   let html = "", chips = "";
   for (const sec of MENU[state.tab]) {
-    const hits = sec.items.filter(it => dietOk(it) && match(it.name, it.desc, it.option, sec.es, sec.en));
+    const hits = sec.items.filter(it => dietOk(it) && match(it.name, it.desc, it.option, sec.title));
     if (!hits.length) continue;
-    chips += `<button class="chip" data-target="${sec.id}">${esc(sec.es)}</button>`;
+    chips += `<button class="chip" data-target="${sec.id}">${esc(sec.title)}</button>`;
     const extras = sec.extras && sec.extras.items.filter(dietOk);
-    html += `<section class="sec" id="${sec.id}"><div class="sec-head"><h2>${esc(sec.es)}</h2>${sec.en ? `<span class="en">(${esc(sec.en)})</span>` : ""}</div>`
+    html += `<section class="sec" id="${sec.id}"><div class="sec-head"><h2>${esc(sec.title)}</h2></div>`
       + (sec.note ? `<p class="sec-note">${esc(sec.note)}</p>` : "")
       + hits.map(itemHTML).join("")
       + (extras && extras.length ? `<div class="extras"><b>${esc(sec.extras.title)}</b><ul>${extras.map(x => `<li>${markHTML(x)}<span class="n">${esc(x.name)}</span><span class="p">${esc(x.price)}</span></li>`).join("")}</ul></div>` : "")
