@@ -45,6 +45,7 @@
   const subtotal = () => lines().reduce((a, l) => a + l.qty * l.price, 0);
 
   function setQty(k, q, announce){
+    touched();
     q = Math.max(0, Math.min(20, q));
     if(q === 0) delete cart.lines[k];
     else cart.lines[k] = {name:ITEMS[k].name, qty:q, note:(cart.lines[k] || {}).note || ""};
@@ -96,9 +97,18 @@
   const sheet = $("sheet"), linesEl = $("lines");
   $("o-name").value = cart.name; $("o-note").value = cart.note;
 
-  function message(){
+  // Order reference, e.g. T10-1432-K7Q — the same ref appears in WhatsApp and in the order log sheet.
+  function newRef(){
     const now = new Date(), hhmm = String(now.getHours()).padStart(2,"0") + String(now.getMinutes()).padStart(2,"0");
-    const out = [`*NEW ORDER · TABLE ${TABLE}*`, `Ref T${TABLE}-${hhmm}` + (cart.name.trim() ? ` · ${cart.name.trim()}` : ""), ""];
+    const abc = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+    let tag = ""; for(let i = 0; i < 3; i++) tag += abc[Math.floor(Math.random() * abc.length)];
+    return `T${TABLE}-${hhmm}-${tag}`;
+  }
+  let ref = newRef(), sent = false;
+  const touched = () => { if(sent){ ref = newRef(); sent = false; } };   // edited after sending → it's a new order
+
+  function message(){
+    const out = [`*NEW ORDER · TABLE ${TABLE}*`, `Ref ${ref}` + (cart.name.trim() ? ` · ${cart.name.trim()}` : ""), ""];
     lines().forEach(l => {
       out.push(`${l.qty} × ${LABEL[l.k]} — ${money(l.qty * l.price)}`);
       if(l.note.trim()) out.push(`   ↳ ${l.note.trim()}`);
@@ -151,25 +161,45 @@
   });
   linesEl.addEventListener("input", e => {
     if(!e.target.classList.contains("l-note")) return;
-    cart.lines[e.target.dataset.k].note = e.target.value; save();
+    touched(); cart.lines[e.target.dataset.k].note = e.target.value; save();
     $("send").href = waLink(); $("send-again").href = waLink();
   });
-  $("o-name").addEventListener("input", e => { cart.name = e.target.value; save(); $("send").href = waLink(); });
-  $("o-note").addEventListener("input", e => { cart.note = e.target.value; save(); $("send").href = waLink(); });
+  $("o-name").addEventListener("input", e => { touched(); cart.name = e.target.value; save(); $("send").href = waLink(); });
+  $("o-note").addEventListener("input", e => { touched(); cart.note = e.target.value; save(); $("send").href = waLink(); });
 
   const showSent = on => { $("sheet-edit").hidden = on; $("sheet-sent").hidden = !on; };
-  $("ob-open").addEventListener("click", () => { showSent(false); $("send-err").hidden = true; sheet.showModal(); });
+  $("ob-open").addEventListener("click", () => {
+    if($("sheet-sent").hidden) { ref = newRef(); render(); }    // fresh ref per order, kept while "sent" is showing
+    showSent(false); $("send-err").hidden = true; sheet.showModal();
+  });
+
+  // Copy of the order for the café's Google Sheet (config.js → ordersUrl). sendBeacon still
+  // delivers while the phone switches to WhatsApp; the sheet ignores a repeated ref.
+  function logOrder(){
+    sent = true;
+    if(!CONFIG.ordersUrl) return;
+    const body = JSON.stringify({
+      ref, table:TABLE, name:cart.name.trim(), note:cart.note.trim(),
+      items: lines().map(l => ({name:LABEL[l.k], qty:l.qty, price:l.price, note:l.note.trim()})),
+    });
+    try{
+      if(navigator.sendBeacon && navigator.sendBeacon(CONFIG.ordersUrl, new Blob([body], {type:"text/plain"}))) return;
+    }catch(e){}
+    fetch(CONFIG.ordersUrl, {method:"POST", mode:"no-cors", keepalive:true, headers:{"Content-Type":"text/plain"}, body}).catch(()=>{});
+  }
   $("sheet-x").addEventListener("click", () => sheet.close());
   sheet.addEventListener("click", e => { if(e.target === sheet) sheet.close(); });   // tap the backdrop to close
   $("send").addEventListener("click", e => {
     const err = !count() ? "Add something to your order first."
       : !/^\d{8,15}$/.test(CONFIG.whatsapp) ? "Ordering by WhatsApp isn't switched on yet — please order with your server." : "";
     if(err){ e.preventDefault(); $("send-err").textContent = err; $("send-err").hidden = false; return; }
+    logOrder();
     showSent(true);
   });
+  $("send-again").addEventListener("click", logOrder);
   $("back-edit").addEventListener("click", () => showSent(false));
   $("new-order").addEventListener("click", () => {
-    cart = {lines:{}, name:cart.name, note:""}; $("o-note").value = "";
+    cart = {lines:{}, name:cart.name, note:""}; $("o-note").value = ""; ref = newRef(); sent = false;
     save(); render(); sheet.close();
     live.textContent = "Started a new order.";
   });
