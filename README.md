@@ -1,13 +1,23 @@
 # Bombon Menu — web version
 
-Earthy / rustic-modern café menu (warm minimalism, wabi-sabi, vintage European bistro).
+Spanish-themed café menu: Andalusian azulejo tiles, pimentón red, saffron and cobalt. Laid out like the
+Dario's digital menu: a centred "book", sticky bar with **Drinks · Food · Sweets** tabs, **★ Signatures**,
+a **Veg | Non-veg** switch, search, and section links that follow the scroll. Section titles are Spanish
+with English subtitles; dish names are unchanged.
 
 ## Files
-- `index.html` — page shell: header, nav, footer
-- `menu-data.js` — **every section, item, description, price and diet tag** (edit this to change the menu)
-- `styles.css` — colours (CSS variables at the top), fonts, layout, print styles
-- `app.js` — turns the data into the page, highlights the nav, runs the diet filter
+- `index.html` — page shell: cover, sticky bar, footer
+- `menu-data.js` — **every tab, section, dish, price and diet tag**, plus the Signatures lists (edit this to change the menu)
+- `styles.css` — colours and fonts (variables at the top), layout, order bar/sheet, print
+- `app.js` — draws the current tab, filters (tab, diet, search, Signatures), section links, remembers choices
+- `order.js` — table ordering (see below)
 - `vendor/qrcode.js` — QR code generator (MIT, Kazuhiko Arase), bundled so `tables.html` works offline
+
+## Veg / Non-veg
+Tap **Veg** or **Non-veg** to filter; tap it again to show everything. Non-veg includes egg dishes, which also
+carry an **EGG** tag. Sections with nothing left disappear, and a tab with nothing left (e.g. Drinks under
+Non-veg) offers to jump to one that has. Links can open a view directly: `?tab=food&diet=veg`
+(`tab` = drinks | food | sweets, `diet` = veg | nonveg). A link's choice wins over what the phone remembered.
 
 ## View it
 Double-click `index.html`, or run a local server:
@@ -57,37 +67,28 @@ so someone could still send a fake order, and anyone could edit the table number
 unusual orders.
 
 ## Editing items
-Each item in `menu-data.js` is an object:
+`menu-data.js` has three tabs (`drinks`, `food`, `sweets`), each a list of sections:
 
-    { name:"Avocado Toast", price:550, desc:"tomato jam, …", diet:"veg" }
+    { id:"platos", es:"Platos", en:"Plates", note:"small print", ctx:"Kitchen label", items:[ … ], extras:{ title, items:[ … ] } }
 
-- `name`, `price`, `diet` are required; `desc`, `option` (small italic note like "hot / iced") and `addons` are optional
-- `price: null` shows no price
-- `diet` must be one of:
-  - `"veg"` — no meat, fish or egg (dairy and honey are fine)
-  - `"egg"` — contains egg, no meat or fish
-  - `"nonveg"` — contains meat, poultry or fish (even if it also has egg)
-- `addons: [ { name:"grilled chicken", price:"+150", diet:"nonveg" }, … ]` — each add-on has its own diet; under the Veg filter non-veg add-ons are hidden while the dish stays
+Each dish is an object:
 
-## Diet filter
-The bar under the section nav has **All · Veg · Egg · Non-Veg** with live counts. Veg also offers "include egg dishes".
-Empty groups and sections (and their nav links) are hidden automatically.
+    { name:"Avocado Toast", price:550, desc:"tomato jam, …", option:"hot / iced", diet:"veg" }
 
-The choice is remembered in the browser and in the URL, so links / QR codes can open the menu pre-filtered:
-
-- `index.html?diet=veg` — vegetarian
-- `index.html?diet=veg&egg=1` — vegetarian + egg dishes
-- `index.html?diet=egg` — egg dishes
-- `index.html?diet=nonveg` — non-vegetarian
-
-A `?diet=` in the link always wins over what the browser remembered.
+- `name`, `price`, `diet` are required; `desc` and `option` (small italic note) are optional; `price: null` shows "ask us"
+- `diet`: `"veg"` (no meat, fish or egg; dairy and honey are fine), `"egg"` (egg, no meat or fish; shown under Non-veg
+  with an EGG tag), `"nonveg"` (meat, poultry or fish)
+- `ctx` on a section is added to short dish names on orders, e.g. "Classic" → "Matcha: Classic"
+- `extras` is a boxed list under a section (the pasta add-ons); each extra has its own `diet`
+- `SIGNATURES` at the bottom lists the dishes behind the ★ Signatures button, per tab
+- If you rename a dish, guests' saved baskets simply drop it, and nothing breaks.
 
 ## Print / PDF
-Open in Chrome → Cmd+P → Save as PDF (A4, margins "None", background graphics on).
-Each section prints on its own A4 page with the legend and service-charge note.
-Print uses the current filter: e.g. with Veg selected only vegetarian items print, and the cover and every page are labelled "Vegetarian menu".
+Cmd+P prints all three tabs one after another (the sticky bar and ordering buttons are left out).
 
 ## Design notes
-- Fonts (Google Fonts): Fraunces (titles), Cormorant Garamond small caps (item names, prices), Karla (descriptions), Caveat (handwritten accents)
-- Palette: oat paper `#EFE7DA`, espresso ink `#2B1D14`, clay `#A9532F`, olive `#6E6B4A`, ochre `#B98C3E`, bistro burgundy `#4A1F1E`
-- Diet marks (Indian standard): green square + dot = veg `#1E8E3E`, ochre square + dot = egg `#C48A1A`, brown square + triangle = non-veg `#8B3A1E`
+- Fonts (Google Fonts): Abril Fatface (wordmark), Yellowtail (section titles, links), Oswald (labels, prices),
+  Josefin Sans (dish names), EB Garamond italic (descriptions)
+- Colours: pimentón `#8E2B1F`, saffron `#E8A623`, cobalt `#1F4B99`, olive `#5F6E2C`, crema `#FBF2DF`, ink `#3A1C12`
+- Tab accent colours: Drinks cobalt, Food pimentón, Sweets amber
+
