@@ -194,7 +194,7 @@ footer .concept { font-family: var(--display); font-weight: 400; font-size: 19px
 .orderbar.tracking button { background: var(--tinta); }
 .live-dot { display: inline-block; width: 10px; height: 10px; border-radius: 50%; margin-right: 8px; background: var(--azafran); box-shadow: 0 0 0 0 rgba(232,166,35,.6); animation: pulse 1.6s infinite; vertical-align: 1px; }
 .live-dot.preparing { background: #F0B44C; }
-.live-dot.served { background: #58C27D; animation: none; }
+.live-dot.served, .live-dot.paid { background: #58C27D; animation: none; }
 .live-dot.cancelled { background: #E5484D; animation: none; }
 @keyframes pulse { 70% { box-shadow: 0 0 0 8px rgba(232,166,35,0); } 100% { box-shadow: 0 0 0 0 rgba(232,166,35,0); } }
 .orders-h { margin: 18px 0 8px; font-family: var(--display); font-weight: 400; font-size: 20px; letter-spacing: .04em; text-transform: uppercase; color: var(--rojo); }
