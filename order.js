@@ -74,9 +74,9 @@
   let placed = [];
   try { placed = (JSON.parse(localStorage.getItem(PLACED) || "[]") || []).filter(o => o && o.id && Date.now() - o.at < KEEP); } catch (e) {}
   const savePlaced = () => { try { localStorage.setItem(PLACED, JSON.stringify(placed)); } catch (e) {} };
-  const STEP = { new: 0, preparing: 1, served: 2 };
-  const STATUS_TEXT = { new: "Received", preparing: "Preparing", served: "Served", cancelled: "Cancelled" };
-  const finished = o => o.status === "served" || o.status === "cancelled";
+  const STEP = { new: 0, preparing: 1, served: 2, paid: 2 };
+  const STATUS_TEXT = { new: "Received", preparing: "Preparing", served: "Served", cancelled: "Cancelled", paid: "Paid" };
+  const finished = o => o.status === "served" || o.status === "paid" || o.status === "cancelled";
   // The bar keeps offering "Track your order" until 30 minutes after the last order is served.
   const trackable = () => placed.filter(o => !finished(o) || Date.now() - (o.statusAt || o.at) < 30 * 60e3);
   const watching = {};
