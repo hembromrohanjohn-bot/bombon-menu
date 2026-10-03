@@ -62,6 +62,9 @@ Each dish is an object:
 - `name`, `price`, `diet` are required; `desc` and `option` (small italic note) are optional; `price: null` shows "ask us"
 - `diet`: `"veg"` (no meat, fish or egg; dairy and honey are fine), `"egg"` (egg, no meat or fish; shown under Non-veg
   with an EGG tag), `"nonveg"` (meat, poultry or fish)
+- `image` (optional) adds a dish photo, e.g. `image:"images/butter-croissant.jpg"`. Use a square, top-down photo of the
+  plate (about 640×640, JPEG). The dish shows a round photo on the menu; tapping it opens a large dish card with the
+  description, price and "Add to order".
 - `ctx` on a section is added to short dish names on orders, e.g. "Classic" → "Matcha: Classic"
 - `extras` is a boxed list under a section (the pasta add-ons); each extra has its own `diet`
 - `SIGNATURES` at the bottom lists the dishes behind the ★ Signatures button, per tab

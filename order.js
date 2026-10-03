@@ -118,7 +118,7 @@
     return `<span class="stepper"><button type="button" data-act="minus" aria-label="Remove one ${n}">−</button><span class="q" aria-label="${q} in your order">${q}</span><button type="button" data-act="plus" aria-label="Add another ${n}">+</button></span>`;
   };
   window.ORDER = {
-    ctl: id => { const q = qty(id); return q ? stepperHTML(id, q) : `<button type="button" class="add" data-act="plus" aria-label="Add ${esc(byId(id).name)}">+ Add</button>`; },
+    ctl: id => { const q = qty(id); return q ? stepperHTML(id, q) : `<button type="button" class="add" data-act="plus" aria-label="Add ${esc(byId(id).name)}"><span class="pl">+ </span><span class="tx">Add</span></button>`; },
     refresh: () => bar(),
   };
 
@@ -140,11 +140,13 @@
     const id = holder.dataset.id, act = b.dataset.act, inSheet = holder.classList.contains("oline");
     setQty(id, qty(id) + (act === "plus" ? 1 : -1));
     // keep keyboard focus on the control that replaced the one pressed
-    const again = document.querySelector(`${inSheet ? "#s-body .oline" : ".ctl"}[data-id="${CSS.escape(id)}"]`);
+    const root = holder.closest("dialog") || document;           // stay inside an open dish card / sheet
+    const again = root.querySelector(`${inSheet ? "#s-body .oline" : ".ctl"}[data-id="${CSS.escape(id)}"]`);
     const f = again && (again.querySelector(`[data-act="${act}"]`) || again.querySelector("[data-act]"));
     if (f) f.focus(); else if (sheet.open) $("#s-x").focus();
   }
   document.getElementById("pages").addEventListener("click", onStep);
+  document.getElementById("dish").addEventListener("click", onStep);      // the big dish card (app.js)
 
   /* ---------- floating order bar + sheet ---------- */
   document.documentElement.classList.add("ordering");

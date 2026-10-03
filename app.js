@@ -33,7 +33,8 @@ const ctlHTML = it => (window.ORDER && it.price != null) ? `<div class="ctl" dat
 
 function itemHTML(it) {
   const price = it.price == null ? '<div class="price ask">ask us</div>' : `<div class="price">${fmt(it.price)}</div>`;
-  return `<div class="item" data-id="${esc(it.id)}"><h3>${markHTML(it)}<span class="nm">${esc(it.name)}</span>${it.option ? `<span class="opt">${esc(it.option)}</span>` : ""}${tagsHTML(it)}</h3>${price}${it.desc ? `<p>${esc(it.desc)}</p>` : ""}${ctlHTML(it)}</div>`;
+  const photo = it.image ? `<button type="button" class="thumb" data-dish="${esc(it.id)}" aria-label="See ${esc(it.name)}"><img src="${esc(it.image)}" alt="" loading="lazy" width="84" height="84"></button>` : "";
+  return `<div class="item${it.image ? " has-img" : ""}" data-id="${esc(it.id)}">${photo}<h3>${markHTML(it)}<span class="nm">${esc(it.name)}</span>${it.option ? `<span class="opt">${esc(it.option)}</span>` : ""}${tagsHTML(it)}</h3>${price}${it.desc ? `<p>${esc(it.desc)}</p>` : ""}${ctlHTML(it)}</div>`;
 }
 const legendHTML = () => '<div class="legend"><span><span class="mark veg"></span>Vegetarian</span><span><span class="mark nonveg"></span>Non-vegetarian</span><span><span class="tag egg">EGG</span>Contains egg</span><span class="sig">signature</span></div>';
 
@@ -199,4 +200,38 @@ window.addEventListener("afterprint", () => { if (printBackup != null) { render(
   if (DIETS.includes(pd)) state.diet = pd;
   if (TABS[location.hash.slice(1)]) state.tab = location.hash.slice(1);
 }
+/* ---------- dish card: big photo, description, price, Add (dishes with an image) ---------- */
+document.body.insertAdjacentHTML("beforeend", `
+<dialog class="dish" id="dish" aria-labelledby="dish-name">
+  <button type="button" class="dish-x" id="dish-x" aria-label="Close">×</button>
+  <div class="dish-photo"><img id="dish-img" alt=""></div>
+  <div class="dish-body">
+    <div class="dish-top"><h2 id="dish-name"></h2><span class="dish-diet" id="dish-diet"></span></div>
+    <p class="dish-sec" id="dish-sec"></p>
+    <p class="dish-desc" id="dish-desc"></p>
+    <div class="dish-foot">
+      <div><span class="dish-label">Price</span><span class="dish-price" id="dish-price"></span></div>
+      <div class="dish-ctl" id="dish-ctl"></div>
+    </div>
+  </div>
+</dialog>`);
+const dish = $("#dish");
+function openDish(id) {
+  const r = ITEM_BY_ID[id]; if (!r) return;
+  const it = r.item;
+  $("#dish-img").src = it.image; $("#dish-img").alt = it.name;
+  $("#dish-name").textContent = it.name;
+  $("#dish-diet").innerHTML = markHTML(it) + (it.diet === "egg" ? '<span class="tag egg">EGG</span>' : "") + `<span>${isNonVeg(it) ? "Non-veg" : "Veg"}</span>`;
+  $("#dish-sec").textContent = r.sec.title + (it.option ? " · " + it.option : "");
+  $("#dish-desc").textContent = it.desc || "";
+  $("#dish-desc").hidden = !it.desc;
+  $("#dish-price").textContent = it.price == null ? "Ask us" : "₹" + fmt(it.price);
+  // + Add / stepper, only when ordering from a table (order.js keeps it in step with the menu)
+  $("#dish-ctl").innerHTML = window.ORDER && it.price != null ? `<div class="ctl" data-id="${esc(it.id)}">${ORDER.ctl(it.id)}</div>` : "";
+  dish.showModal();
+}
+$("#pages").addEventListener("click", e => { const t = e.target.closest(".thumb"); if (t) openDish(t.dataset.dish); });
+$("#dish-x").addEventListener("click", () => dish.close());
+dish.addEventListener("click", e => { if (e.target === dish) dish.close(); });
+
 render();

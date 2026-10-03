@@ -9,6 +9,8 @@
    Item:
      { name:"Avocado Toast", price:550, desc:"tomato jam, …", option:"hot / iced", diet:"veg" }
      name, price, diet are required · desc and option are optional · price null = "ask us"
+     image (optional): a photo in images/, ideally a square, top-down shot of the plate. The dish then
+       shows a round photo, and tapping it opens a large dish card (photo, description, price, Add).
      diet:
        "veg"    — no meat, fish or egg (dairy & honey are fine)
        "egg"    — contains egg, no meat or fish. Shown under NON-VEG with an EGG tag
@@ -133,7 +135,7 @@ food: [
     { name:"Bacon Rashers", price:250, diet:"nonveg" }
   ]},
   { id:"bakes-bagels", title:"Bakes & Bagels", items:[
-    { name:"Butter Croissant", price:320, diet:"veg" },
+    { name:"Butter Croissant", price:320, diet:"veg", image:"images/butter-croissant.jpg" },
     { name:"Almond Croissant", price:450, diet:"veg" },
     { name:"Chocolate Croissant", price:400, diet:"veg" },
     { name:"Cucumber Cream Cheese Bagel", price:370, diet:"veg" },
