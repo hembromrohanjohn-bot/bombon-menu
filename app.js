@@ -33,7 +33,7 @@ const ctlHTML = it => (window.ORDER && it.price != null) ? `<div class="ctl" dat
 
 function itemHTML(it) {
   const price = it.price == null ? '<div class="price ask">ask us</div>' : `<div class="price">${fmt(it.price)}</div>`;
-  const photo = it.image ? `<button type="button" class="thumb" data-dish="${esc(it.id)}" aria-label="See ${esc(it.name)}"><img src="${esc(it.image)}" alt="" loading="lazy" width="84" height="84"></button>` : "";
+  const photo = it.image ? `<button type="button" class="thumb" data-dish="${esc(it.id)}" aria-label="See ${esc(it.name)}"><img src="${esc(it.image.replace(/^images\//, "images/thumbs/"))}" alt="" loading="lazy" decoding="async" width="84" height="84"></button>` : "";
   return `<div class="item${it.image ? " has-img" : ""}" data-id="${esc(it.id)}">${photo}<h3>${markHTML(it)}<span class="nm">${esc(it.name)}</span>${it.option ? `<span class="opt">${esc(it.option)}</span>` : ""}${tagsHTML(it)}</h3>${price}${it.desc ? `<p>${esc(it.desc)}</p>` : ""}${ctlHTML(it)}</div>`;
 }
 const legendHTML = () => '<div class="legend"><span><span class="mark veg"></span>Vegetarian</span><span><span class="mark nonveg"></span>Non-vegetarian</span><span><span class="tag egg">EGG</span>Contains egg</span><span class="sig">signature</span></div>';

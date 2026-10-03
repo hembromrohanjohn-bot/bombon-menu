@@ -138,7 +138,7 @@ footer .concept { font-family: var(--display); font-weight: 400; font-size: 19px
 .item.has-img > h3 { grid-column: 2; }
 .item.has-img > .price { grid-column: 3; }
 .item.has-img > p { grid-column: 2 / -1; }
-.ordering .item.has-img > p { grid-column: 2; }
+.ordering .item.has-img:not(.pick) > p { grid-column: 2; }   /* beats the general ordering rule further down */
 .ordering .item.has-img > .ctl { grid-column: 3; }
 .thumb { width: 84px; height: 84px; padding: 0; border: 0; border-radius: 50%; overflow: hidden; cursor: zoom-in; background: var(--arena);
   box-shadow: 0 10px 18px -8px rgba(58,28,18,.55), 0 0 0 3px #fff; transition: transform .2s; }
